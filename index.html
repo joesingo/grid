@@ -386,6 +386,33 @@
             this.redraw();
          }
 
+         /*
+          * Adjust the zoom matrix and translation. zoom_factor is percentage
+          * increase in zoom, e.g. 2 means 200% zoom.
+          * The translation is adjusted so that the point that maps to
+          * (mouse_x, mouse_y) remains the same.
+          */
+         this.zoom = function(zoom_factor, mouse_x, mouse_y) {
+            // Find the point that maps to the centre of the canvas
+            var q_coords = this.fromCanvasCoords(canvas.width / 2, canvas.height / 2);
+            var q = new Matrix([[q_coords[0]], [q_coords[1]]]);
+
+            // Find point that maps onto the zoom point
+            var w_coords = this.fromCanvasCoords(mouse_x, mouse_y);
+            var w = new Matrix([[w_coords[0]], [w_coords[1]]]);
+
+            var new_zoom = zoom_matrix.scale(zoom_factor + 1);
+
+            // Adjust translation so that the mouse stays at the same position
+            // in the grid
+            var zoom_difference = new_zoom.add(zoom_matrix.scale(-1));
+            translation = translation.add(zoom_difference.multiply(w).scale(-1));
+
+            zoom_matrix = new_zoom;
+
+            this.redraw();
+         }
+
          // Set up event listeners for scrolling and zooming
          var mouse_state = {
             "down": false,
@@ -419,6 +446,14 @@
 
             }
             mouse_state.prevPos = [x, y];
+         });
+         canvas.addEventListener("mousewheel", function(e) {
+            var x = e.offsetX;
+            var y = e.offsetY;
+
+            zoom_factor = 0.001 * e.wheelDelta;
+
+            thisGrid.zoom(zoom_factor, x, y);
          });
     }
 
