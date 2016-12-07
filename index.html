@@ -4,7 +4,9 @@
 <head>
     <title></title>
     <style type="text/css">
-
+        body {
+            margin: 0;
+        }
     </style>
 </head>
 
@@ -164,7 +166,7 @@
 
         var settings = {
             // The step size to go up in when plotting functions
-            "delta": 0.01,
+            "delta": 0.04,
 
             "shapes": {
                 "colour": "black",
@@ -182,6 +184,11 @@
                     "colour": "gray",
                     "width": 1
                 }
+            },
+
+            "axes": {
+                "colour": "black",
+                "width": 2
             }
         }
 
@@ -347,6 +354,26 @@
             ctx.stroke();
          }
 
+         /*
+          * Draw the lines x=0 and y=0
+          */
+         this.drawAxes = function() {
+            var origin = this.canvasCoords(0, 0);
+            var x = origin[0];
+            var y = origin[1];
+
+            if ((x >= 0 && x <= canvas.width) || (y >=0 && y <= canvas.height)) {
+                ctx.beginPath();
+                ctx.strokeStyle = settings.axes.colour;
+                ctx.lineWidth = settings.axes.width;
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+         }
+
         /*
          * Redraw all shapes and functions
          */
@@ -354,6 +381,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             this.drawGridlines();
+            this.drawAxes();
 
             for (var i=0; i<shapes.length; i++) {
                 this.drawShape(shapes[i], true);
@@ -452,12 +480,11 @@
     }
 
     var canvas = document.createElement("canvas");
-    canvas.width = 600;
-    canvas.height = 600;
+    canvas.width = window.innerWidth;;
+    canvas.height = window.innerHeight;
 
     var grid = new Grid(canvas);
-
-    grid.drawGridlines();
+    grid.redraw();
 
     grid.drawPolygon(4, 0, 0, 1, Math.PI / 4);
     grid.drawShape([
