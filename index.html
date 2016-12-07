@@ -356,7 +356,6 @@
             this.drawGridlines();
 
             for (var i=0; i<shapes.length; i++) {
-                console.log("drawing shape", i);
                 this.drawShape(shapes[i], true);
             }
 
@@ -377,11 +376,6 @@
             var w = new Matrix([[u], [v]]);
             var vector = zoom_matrix.multiply(w);
             translation = translation.add(vector);
-
-            console.log("--");
-            console.log(w.toString());
-            console.log(vector.toString());
-            console.log(translation.toString());
 
             this.redraw();
          }
@@ -477,8 +471,6 @@
         function(x) {return Math.sin(x)},
         [0, 2 * Math.PI]
     );
-
-    console.log(grid.canvasCoords(0, 0));
 
     document.body.appendChild(canvas);
 
