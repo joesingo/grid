@@ -159,17 +159,12 @@
         var canvas = cnv;
         var ctx = canvas.getContext("2d");
 
-        // Draw border
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "black";
-        ctx.strokeRect(0, 0, canvas.width, canvas.height);
-
         var settings = {
             // The step size to go up in when plotting functions
             "delta": 0.04,
 
             "shapes": {
-                "colour": "black",
+                "colour": "#ee0155",
                 "width": 2
             },
 
@@ -192,6 +187,11 @@
             }
         }
 
+        // Constants to represent the different types of grid object
+        const SHAPE = "shape";
+        const FUNCTION = "function";
+        var grid_object_types = [SHAPE, FUNCTION];
+
         var zoom_matrix = new Matrix([
             [50, 0],
             [0, 50]
@@ -201,9 +201,8 @@
             [1]
         ]);
 
-        var shapes = [];
-        var functions = [];
-        var param_functions = [];
+        var grid_objects = {};
+        var current_id = 0;
 
         /*
          * Convert real coordinates to canvas coordinates
@@ -233,33 +232,97 @@
         }
 
         /*
-         * Draw a shape by drawing a line between each point (represented as
-         * a 2-array) in the array of points provided
+         * Draw a grid object onto the canvas
          */
-        this.drawShape = function(points, redraw) {
-            if (!redraw) {
-                shapes.push(points);
-            }
-
-            ctx.strokeStyle = settings.shapes.colour;
-            ctx.lineWidth = settings.shapes.width;
+        this.drawObject = function(grid_obj) {
+            ctx.strokeStyle = grid_obj.colour;
+            ctx.lineWidth = grid_obj.line_width;
 
             ctx.beginPath();
 
-            for (var i=0; i<points.length; i++) {
-                var coords = this.canvasCoords(points[i][0], points[i][1]);
-                ctx.lineTo(coords[0], coords[1]);
+            switch (grid_obj.type) {
+                case "shape":
+                    // Draw a shape by drawing lines connecting the points in
+                    // the points array
+                    var points = grid_obj.data.points;
+                    for (var i=0; i<points.length; i++) {
+                        var coords = this.canvasCoords(points[i][0], points[i][1]);
+                        ctx.lineTo(coords[0], coords[1]);
+                    }
+                    break;
+
+                case "function":
+                    // Draw a parametric function by stepping through the domain
+                    // and drawing a line connecting each point
+                    var d = grid_obj.data;
+                    for (var t=d.domain[0]; t<=d.domain[1]; t+=settings.delta) {
+                        var point = d.function(t);
+                        var coords = this.canvasCoords(point[0], point[1]);
+                        ctx.lineTo(coords[0], coords[1]);
+                    }
+                    break;
             }
 
             ctx.stroke();
         }
 
         /*
-         * Draw an n-sided regular polygon centered at the point provided,
-         * where radius is the distance from each vertex to the center.
-         * Rotation is the anti-clockwise rotation in radians
+         * Create a JS object to represent a grid object (e.g. shape, function),
+         * add it to the list of grid objects, and draw it.
          */
-        this.drawPolygon = function(n, cx, cy, radius, rotation, redraw) {
+        this.addObject = function(type, data, colour, line_width) {
+            if (grid_object_types.indexOf(type) < 0) {
+                throw "Invalid type '" + type + "'";
+                return;
+            }
+
+            var obj = {};
+            obj.type = type;
+            obj.data = data;
+            obj.colour = colour || settings.shapes.colour;
+            obj.line_width = line_width || settings.shapes.width;
+
+            // Add the objet to the list
+            var id = current_id;
+            grid_objects[id] = obj;
+            current_id++;
+
+            // Draw the object
+            this.drawObject(obj);
+
+            // Return the ID so that the user can remove/edit this object
+            return id;
+        }
+
+        /*
+         * Remove the object with the specified object ID
+         */
+        this.removeObject = function(id) {
+            delete grid_objects[id];
+            this.redraw();
+        }
+
+        /*
+         * Return the grid object with the given object ID
+         */
+        this.getObject = function(id) {
+            return grid_objects[id];
+        }
+
+        /*
+         * Add a shape that is represented by an array of points to connect with
+         * straight lines
+         */
+        this.addShape = function(points, colour, width) {
+            return this.addObject(SHAPE, {"points": points}, colour, width);
+        }
+
+        /*
+         * Add an n-sided regular polygon centered at the point provided,
+         * where radius is the distance from each vertex to the center.
+         * Rotation is the anti-clockwise rotation in radians.
+         */
+        this.addPolygon = function(n, cx, cy, radius, rotation, colour, width) {
             var points = [];
 
             for (var i=0; i<=n; i++) {
@@ -270,56 +333,37 @@
                 points.push([x, y]);
             }
 
-            this.drawShape(points, redraw);
+            return this.addShape(points, colour, width);
         }
 
         /*
-         * Plot the function f over the specified domain (2-array of end points)
-         */
-        this.drawFunction = function(f, domain, redraw) {
-            if (!redraw) {
-                functions.push({"function": f, "domain": domain});
-            }
-
-            ctx.strokeStyle = settings.shapes.colour;
-            ctx.lineWidth = settings.shapes.width;
-
-            ctx.beginPath();
-            for (var x=domain[0]; x<=domain[1]; x+=settings.delta) {
-                var y = f(x);
-                var coords = this.canvasCoords(x, y);
-                ctx.lineTo(coords[0], coords[1]);
-            }
-            ctx.stroke();
-        }
-
-        /*
-         * Similar to drawFunction() above, but where f is a parametric function,
+         * Similar to addFunction() below, but where f is a parametric function,
          * i.e. (x, y) = f(t)
          */
-         this.drawParametricFunction = function(f, domain, redraw) {
-            if (!redraw) {
-                param_functions.push({"function": f, "domain": domain});
-            }
-
-            ctx.strokeStyle = settings.shapes.colour;
-            ctx.lineWidth = settings.shapes.width;
-
-            ctx.beginPath();
-            for (var t=domain[0]; t<=domain[1]; t+=settings.delta) {
-                var point = f(t);
-                var coords = this.canvasCoords(point[0], point[1]);
-                ctx.lineTo(coords[0], coords[1]);
-            }
-            ctx.stroke();
+         this.addParametricFunction = function(f, domain, colour, width) {
+            return this.addObject(FUNCTION, {"function": f, "domain": domain}, colour,
+                           width);
          }
 
-         this.drawGridlines = function() {
+        /*
+         * Add the function f over the specified domain (2-array of end points)
+         */
+        this.addFunction = function(f, domain, colour, width) {
+            // Create a parametric version of this function so that we can use
+            // one method to draw both regular and parametric functions
+            var para_func = function(x) {
+                return [x, f(x)];
+            };
+
+            return this.addParametricFunction(para_func, domain, colour, width);
+        }
+
+        this.drawGridlines = function() {
             ctx.beginPath();
 
             // Calculate the real coordinates that map to the corners of the
             // canvas
-            var top_left = this.fromCanvasCoords(0, 0);
+            var top_left = thisGrid.fromCanvasCoords(0, 0);
             var bottom_right = this.fromCanvasCoords(canvas.width, canvas.height);
 
             for (var i in settings.gridLines) {
@@ -357,7 +401,7 @@
          /*
           * Draw the lines x=0 and y=0
           */
-         this.drawAxes = function() {
+        this.drawAxes = function() {
             var origin = this.canvasCoords(0, 0);
             var x = origin[0];
             var y = origin[1];
@@ -375,30 +419,26 @@
          }
 
         /*
-         * Redraw all shapes and functions
+         * Redraw axes, gridline, shapes and functions
          */
         this.redraw = function() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw border
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
             this.drawGridlines();
             this.drawAxes();
 
-            for (var i=0; i<shapes.length; i++) {
-                this.drawShape(shapes[i], true);
-            }
-
-            for (var i=0; i<functions.length; i++) {
-                this.drawFunction(functions[i].function, functions[i].domain, true);
-            }
-
-            for (var i=0; i<param_functions.length; i++) {
-                this.drawParametricFunction(param_functions[i].function,
-                                            param_functions[i].domain, true);
+            for (var i in grid_objects) {
+                this.drawObject(grid_objects[i]);
             }
         }
 
          /*
-          * Adjust the translation by the vector <u, v> in canvas coordinates
+          * Adjust the translation by the vector <u, v>
           */
          this.translate = function(u, v) {
             var w = new Matrix([[u], [v]]);
@@ -477,24 +517,25 @@
 
             thisGrid.zoom(zoom_factor, x, y);
          });
+
+        this.redraw();
     }
 
     var canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;;
-    canvas.height = window.innerHeight;
+    canvas.width = 1000;
+    canvas.height = 600;
 
     var grid = new Grid(canvas);
-    grid.redraw();
 
-    grid.drawPolygon(4, 0, 0, 1, Math.PI / 4);
-    grid.drawShape([
+    var pentagon = grid.addPolygon(5, 0, 0, 1, Math.PI / 4, "black");
+    var shape = grid.addShape([
         [0, 0], [1, 0], [0, 1]
     ]);
-    grid.drawParametricFunction(
+    var circle = grid.addParametricFunction(
         function(t) {return [Math.cos(t), Math.sin(t)]},
         [0, 2 * Math.PI]
     );
-    grid.drawFunction(
+    var sin = grid.addFunction(
         function(x) {return Math.sin(x)},
         [0, 2 * Math.PI]
     );
