@@ -5,7 +5,7 @@ function Grid(cnv) {
 
     var settings = {
         // The step size to go up in when plotting functions
-        "delta": 0.04,
+        "delta": 0.02,
 
         "shapes": {
             "colour": "#ee0155",
@@ -37,8 +37,8 @@ function Grid(cnv) {
     var grid_object_types = [SHAPE, FUNCTION];
 
     var zoom_matrix = new Matrix([
-        [50, 0],
-        [0, 50]
+        [100, 0],
+        [0, 100]
     ]);
     var translation = new Matrix([
         [1],
@@ -281,86 +281,110 @@ function Grid(cnv) {
         }
     }
 
-     /*
-      * Adjust the translation by the vector <u, v>
-      */
-     this.translate = function(u, v) {
-        var w = new Matrix([[u], [v]]);
-        var vector = zoom_matrix.multiply(w);
-        translation = translation.add(vector);
+    /*
+     * Adjust the translation by the vector <u, v>
+     */
+    this.translate = function(u, v) {
+       var w = new Matrix([[u], [v]]);
+       var vector = zoom_matrix.multiply(w);
+       translation = translation.add(vector);
 
-        this.redraw();
+       this.redraw();
      }
 
-     /*
-      * Adjust the zoom matrix and translation. zoom_factor is percentage
-      * increase in zoom, e.g. 2 means 200% zoom.
-      * The translation is adjusted so that the point that maps to
-      * (mouse_x, mouse_y) remains the same.
-      */
-     this.zoom = function(zoom_factor, mouse_x, mouse_y) {
-        // Find the point that maps to the centre of the canvas
-        var q_coords = this.fromCanvasCoords(canvas.width / 2, canvas.height / 2);
-        var q = new Matrix([[q_coords[0]], [q_coords[1]]]);
+    /*
+     * Adjust the zoom matrix and translation. zoom_factor is percentage
+     * increase in zoom, e.g. 2 means 200% zoom.
+     * The translation is adjusted so that the point that maps to
+     * (mouse_x, mouse_y) remains the same.
+     */
+    this.zoom = function(zoom_factor, mouse_x, mouse_y) {
+       // Find the point that maps to the centre of the canvas
+       var q_coords = this.fromCanvasCoords(canvas.width / 2, canvas.height / 2);
+       var q = new Matrix([[q_coords[0]], [q_coords[1]]]);
 
-        // Find point that maps onto the zoom point
-        var w_coords = this.fromCanvasCoords(mouse_x, mouse_y);
-        var w = new Matrix([[w_coords[0]], [w_coords[1]]]);
+       // Find point that maps onto the zoom point
+       var w_coords = this.fromCanvasCoords(mouse_x, mouse_y);
+       var w = new Matrix([[w_coords[0]], [w_coords[1]]]);
+       var new_zoom = zoom_matrix.scale(zoom_factor + 1);
 
-        var new_zoom = zoom_matrix.scale(zoom_factor + 1);
+       // Adjust translation so that the mouse stays at the same position
+       // in the grid
+       var zoom_difference = new_zoom.add(zoom_matrix.scale(-1));
+       translation = translation.add(zoom_difference.multiply(w).scale(-1));
+       zoom_matrix = new_zoom;
 
-        // Adjust translation so that the mouse stays at the same position
-        // in the grid
-        var zoom_difference = new_zoom.add(zoom_matrix.scale(-1));
-        translation = translation.add(zoom_difference.multiply(w).scale(-1));
+       this.redraw();
+    }
 
-        zoom_matrix = new_zoom;
+    /*
+     * Run an animation by calling drawing_function(n) where n ranges from
+     * n0 to n1, increasing linearly by 'speed' units per second.
+     */
+    this.runAnimation = function(drawing_function, n0, n1, speed) {
+        var n = n0;
+        var then = Date.now();
 
-        this.redraw();
-     }
+        var thisGrid = this;
 
-     // Set up event listeners for scrolling and zooming
-     var mouse_state = {
-        "down": false,
-        "prevPos": null
-     };
-     // Need to store a reference to this object so that we can access it
-     // inside the event handlers
-     var thisGrid = this;
-     canvas.addEventListener("mousedown", function(e) {
-        mouse_state.down = true;
-     });
-     canvas.addEventListener("mouseup", function(e) {
-        mouse_state.down = false;
-     });
-     canvas.addEventListener("mouseleave", function(e) {
-        mouse_state.down = false;
-     });
-     canvas.addEventListener("mousemove", function(e) {
-        var x = e.offsetX;
-        var y = e.offsetY;
+        var loop = function() {
+            var now = Date.now();
+            var dt = (now - then) / 1000;
+            then = now;
 
-        if (mouse_state.down && mouse_state.prevPos) {
-            var dx = x - mouse_state.prevPos[0];
-            var dy = y - mouse_state.prevPos[1];
+            n += speed * dt;
 
-            var current_pos = thisGrid.fromCanvasCoords(x, y);
-            var prev_pos = thisGrid.fromCanvasCoords(mouse_state.prevPos[0],
-                                                     mouse_state.prevPos[1]);
-            thisGrid.translate(current_pos[0] - prev_pos[0],
-                               current_pos[1] - prev_pos[1]);
-
+            if (n <= n1) {
+                drawing_function(n);
+                thisGrid.redraw();
+                window.requestAnimationFrame(loop);
+            }
         }
-        mouse_state.prevPos = [x, y];
-     });
-     canvas.addEventListener("mousewheel", function(e) {
-        var x = e.offsetX;
-        var y = e.offsetY;
+        window.requestAnimationFrame(loop);
+    }
 
-        zoom_factor = 0.001 * e.wheelDelta;
+    // Set up event listeners for scrolling and zooming
+    var mouse_state = {
+       "down": false,
+       "prevPos": null
+    };
+    // Need to store a reference to this object so that we can access it
+    // inside the event handlers
+    var thisGrid = this;
+    canvas.addEventListener("mousedown", function(e) {
+       mouse_state.down = true;
+    });
+    canvas.addEventListener("mouseup", function(e) {
+       mouse_state.down = false;
+    });
+    canvas.addEventListener("mouseleave", function(e) {
+       mouse_state.down = false;
+    });
+    canvas.addEventListener("mousemove", function(e) {
+       var x = e.offsetX;
+       var y = e.offsetY;
 
-        thisGrid.zoom(zoom_factor, x, y);
-     });
+       if (mouse_state.down && mouse_state.prevPos) {
+           var dx = x - mouse_state.prevPos[0];
+           var dy = y - mouse_state.prevPos[1];
+
+           var current_pos = thisGrid.fromCanvasCoords(x, y);
+           var prev_pos = thisGrid.fromCanvasCoords(mouse_state.prevPos[0],
+                                                    mouse_state.prevPos[1]);
+           thisGrid.translate(current_pos[0] - prev_pos[0],
+                              current_pos[1] - prev_pos[1]);
+
+       }
+       mouse_state.prevPos = [x, y];
+    });
+    canvas.addEventListener("mousewheel", function(e) {
+       var x = e.offsetX;
+       var y = e.offsetY;
+
+       zoom_factor = 0.001 * e.wheelDelta;
+
+       thisGrid.zoom(zoom_factor, x, y);
+    });
 
     this.redraw();
 }

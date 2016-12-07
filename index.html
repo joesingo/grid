@@ -21,18 +21,28 @@
 
     var grid = new Grid(canvas);
 
-    var pentagon = grid.addPolygon(5, 0, 0, 1, Math.PI / 4, "black");
-    var shape = grid.addShape([
-        [0, 0], [1, 0], [0, 1]
-    ]);
-    var circle = grid.addParametricFunction(
-        function(t) {return [Math.cos(t), Math.sin(t)]},
-        [0, 2 * Math.PI]
-    );
-    var sin = grid.addFunction(
-        function(x) {return Math.sin(x)},
-        [0, 2 * Math.PI]
-    );
+    function getFunction(n) {
+        return function(t) {
+            var r1 = Math.cos(n);
+            var r2 = Math.sin(n);
+            return [r1 + r1*Math.cos(t), r2 + r2*Math.sin(t)];
+        };
+    }
+
+    var domain = [-10, 10];
+
+    var f_id = null;
+    grid.runAnimation(function(n) {
+        if (f_id === null) {
+            f_id = grid.addParametricFunction(getFunction(n), domain, "red");
+            console.log("here", f_id);
+        }
+        else {
+            var func = grid.getObject(f_id).data;
+            func.function = getFunction(n);
+            console.log("there", f_id);
+        }
+    }, 1, 100, 2)
 
     document.body.appendChild(canvas);
 
