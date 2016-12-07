@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <style type="text/css">
+
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript">
+
+    /*
+     * An object to represent a matrix with real entries
+     */
+    function Matrix(entries) {
+        this.entries = entries;
+        this.rows = this.entries.length;
+        this.cols = this.entries[0].length;
+
+        for (var i=1; i<this.rows; i++) {
+            if (this.entries[i].length !== this.cols) {
+                throw "Invalid entries";
+            }
+        }
+
+        /*
+         * Copmute and return this * a
+         */
+        this.multiply = function(a) {
+            if (this.cols !== a.rows) {
+                throw "Incompatible sizes";
+            }
+
+            var new_entries = [];
+
+            for (var i=0; i<this.rows; i++) {
+                new_entries.push([]);
+                for (var j=0; j<a.cols; j++) {
+                    new_entries[i].push(0);
+                    for (var k=0; k<this.cols; k++) {
+                        new_entries[i][j] += this.entries[i][k] * a.entries[k][j];
+                    }
+                }
+            }
+
+            return new Matrix(new_entries);
+        }
+
+        /*
+         * Return this + a
+         */
+        this.add = function(a) {
+            if (this.cols !== a.cols || this.rows !== a.rows) {
+                throw "Incompatible sizes";
+            }
+
+            var new_entries = [];
+
+            for (var i=0; i<this.rows; i++) {
+                new_entries.push([]);
+                for (var j=0; j<a.cols; j++) {
+                    new_entries[i].push(this.entries[i][j] + a.entries[i][j])
+                }
+            }
+
+            return new Matrix(new_entries);
+        }
+
+        /*
+         * Scale this matrix by a number
+         */
+        this.scale = function(k) {
+            var new_entries = [];
+
+            for (var i=0; i<this.rows; i++) {
+                new_entries.push([]);
+                for (var j=0; j<this.cols; j++) {
+                    new_entries[i].push(k * this.entries[i][j]);
+                }
+            }
+
+            return new Matrix(new_entries);
+        }
+
+        /*
+         * Return the Euclidean norm for a column vector (i.e. matrix with one
+         * column)
+         */
+        this.norm = function() {
+            if (this.cols !== 1) {
+                throw "Incompatible size";
+            }
+
+            var squares = 0;
+            for (var i=0; i<this.rows; i++) {
+                squares += Math.pow(this.entries[i][0], 2);
+            }
+
+            return Math.sqrt(squares);
+        }
+
+        /*
+         * Return the determinant of a 2x2 matrix
+         */
+        this.determinant = function() {
+            if (this.cols !== 2 || this.rows !== 2) {
+                throw "Incompatible size";
+            }
+
+            return (this.entries[0][0] * this.entries[1][1] -
+                    this.entries[0][1] * this.entries[1][0]);
+        }
+
+        /*
+         * Return the inverse of a 2x2 matrix
+         */
+        this.inverse = function() {
+            if (this.cols !== 2 || this.rows !== 2) {
+                throw "Incompatible size";
+            }
+
+            var det = this.determinant();
+            if (this.det === 0) {
+                throw "Matrix is not invertible";
+            }
+
+            var new_entries = [
+                [this.entries[1][1], -this.entries[0][1]],
+                [-this.entries[1][0], this.entries[0][0]]
+            ];
+
+            return new Matrix(new_entries).scale(1 / det);
+        }
+
+        /*
+         * Return a string representation of this matrix
+         */
+        this.toString = function() {
+            var o = "";
+            for (var i=0; i<this.rows; i++) {
+                for (var j=0; j<this.cols; j++) {
+                    o += this.entries[i][j] + " ";
+                }
+
+                if (i + 1 < this.rows) {
+                    o += "\n";
+                }
+            }
+            return o;
+        }
+    }
+
+    function Grid(cnv) {
+
+        var canvas = cnv;
+        var ctx = canvas.getContext("2d");
+
+        // Draw border
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "black";
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        var settings = {
+            // The step size to go up in when plotting functions
+            "delta": 0.01,
+
+            "shapes": {
+                "colour": "black",
+                "width": 2
+            },
+
+            "gridLines": {
+                "major": {
+                    "spacing": 1,
+                    "colour": "black",
+                    "width": 1
+                },
+                "minor": {
+                    "spacing": 0.5,
+                    "colour": "gray",
+                    "width": 1
+                }
+            }
+        }
+
+        var zoom_matrix = new Matrix([
+            [50, 0],
+            [0, 50]
+        ]);
+        var translation = new Matrix([
+            [1],
+            [1]
+        ]);
+
+        var shapes = [];
+        var functions = [];
+        var param_functions = [];
+
+        /*
+         * Convert real coordinates to canvas coordinates
+         */
+        this.canvasCoords = function(x, y) {
+            var p = new Matrix([[x], [y]]);
+            var new_point = zoom_matrix.multiply(p).add(translation);
+
+            var coords = [new_point.entries[0][0], new_point.entries[1][0]];
+
+            return [coords[0] + 0.5 * canvas.width, -coords[1] + 0.5*canvas.height]
+        }
+
+        /*
+         * Convert canvas coordinates to real coordinates
+         */
+        this.fromCanvasCoords = function(x, y) {
+            x -= 0.5 * canvas.width;
+            y = -(y - 0.5*canvas.height);
+
+            var p = new Matrix([[x], [y]]);
+            var new_point = zoom_matrix.inverse().multiply(p.add(translation.scale(-1)));
+
+            var coords = [new_point.entries[0][0], new_point.entries[1][0]];
+
+            return [coords[0], coords[1]];
+        }
+
+        /*
+         * Draw a shape by drawing a line between each point (represented as
+         * a 2-array) in the array of points provided
+         */
+        this.drawShape = function(points, redraw) {
+            if (!redraw) {
+                shapes.push(points);
+            }
+
+            ctx.strokeStyle = settings.shapes.colour;
+            ctx.lineWidth = settings.shapes.width;
+
+            ctx.beginPath();
+
+            for (var i=0; i<points.length; i++) {
+                var coords = this.canvasCoords(points[i][0], points[i][1]);
+                ctx.lineTo(coords[0], coords[1]);
+            }
+
+            ctx.stroke();
+        }
+
+        /*
+         * Draw an n-sided regular polygon centered at the point provided,
+         * where radius is the distance from each vertex to the center.
+         * Rotation is the anti-clockwise rotation in radians
+         */
+        this.drawPolygon = function(n, cx, cy, radius, rotation, redraw) {
+            var points = [];
+
+            for (var i=0; i<=n; i++) {
+                var angle = rotation + 2 * Math.PI * i / n;
+                var x = radius * Math.cos(angle) + cx;
+                var y = radius * Math.sin(angle) + cy;
+
+                points.push([x, y]);
+            }
+
+            this.drawShape(points, redraw);
+        }
+
+        /*
+         * Plot the function f over the specified domain (2-array of end points)
+         */
+        this.drawFunction = function(f, domain, redraw) {
+            if (!redraw) {
+                functions.push({"function": f, "domain": domain});
+            }
+
+            ctx.strokeStyle = settings.shapes.colour;
+            ctx.lineWidth = settings.shapes.width;
+
+            ctx.beginPath();
+            for (var x=domain[0]; x<=domain[1]; x+=settings.delta) {
+                var y = f(x);
+                var coords = this.canvasCoords(x, y);
+                ctx.lineTo(coords[0], coords[1]);
+            }
+            ctx.stroke();
+        }
+
+        /*
+         * Similar to drawFunction() above, but where f is a parametric function,
+         * i.e. (x, y) = f(t)
+         */
+         this.drawParametricFunction = function(f, domain, redraw) {
+            if (!redraw) {
+                param_functions.push({"function": f, "domain": domain});
+            }
+
+            ctx.strokeStyle = settings.shapes.colour;
+            ctx.lineWidth = settings.shapes.width;
+
+            ctx.beginPath();
+            for (var t=domain[0]; t<=domain[1]; t+=settings.delta) {
+                var point = f(t);
+                var coords = this.canvasCoords(point[0], point[1]);
+                ctx.lineTo(coords[0], coords[1]);
+            }
+            ctx.stroke();
+         }
+
+         this.drawGridlines = function() {
+            ctx.beginPath();
+
+            // Calculate the real coordinates that map to the corners of the
+            // canvas
+            var top_left = this.fromCanvasCoords(0, 0);
+            var bottom_right = this.fromCanvasCoords(canvas.width, canvas.height);
+
+            for (var i in settings.gridLines) {
+                ctx.strokeStyle = settings.gridLines[i].colour;
+                ctx.lineWidth = settings.gridLines[i].width;
+
+                var spacing = settings.gridLines[i].spacing;
+
+                // Draw vertical lines
+                var start_x = Math.ceil(top_left[0] / spacing);
+                var end_x = Math.floor(bottom_right[0] / spacing);
+
+                for (var x=start_x; x<=end_x; x+=spacing) {
+                    // y coord does not matter here
+                    var coords = this.canvasCoords(x, 0);
+
+                    ctx.moveTo(coords[0], 0);
+                    ctx.lineTo(coords[0], canvas.height);
+                }
+
+                // Draw horizontal lines
+                var end_y = Math.ceil(top_left[1] / spacing);
+                var start_y = Math.floor(bottom_right[1] / spacing);
+
+                for (var y=start_y; y<=end_y; y+=spacing) {
+                    var coords = this.canvasCoords(0, y);
+                    ctx.moveTo(0, coords[1]);
+                    ctx.lineTo(canvas.width, coords[1]);
+                }
+            }
+
+            ctx.stroke();
+         }
+
+        /*
+         * Redraw all shapes and functions
+         */
+        this.redraw = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            this.drawGridlines();
+
+            for (var i=0; i<shapes.length; i++) {
+                console.log("drawing shape", i);
+                this.drawShape(shapes[i], true);
+            }
+
+            for (var i=0; i<functions.length; i++) {
+                this.drawFunction(functions[i].function, functions[i].domain, true);
+            }
+
+            for (var i=0; i<param_functions.length; i++) {
+                this.drawParametricFunction(param_functions[i].function,
+                                            param_functions[i].domain, true);
+            }
+        }
+
+         /*
+          * Adjust the translation by the vector <u, v> in canvas coordinates
+          */
+         this.translate = function(u, v) {
+            var w = new Matrix([[u], [v]]);
+            var vector = zoom_matrix.multiply(w);
+            translation = translation.add(vector);
+
+            console.log("--");
+            console.log(w.toString());
+            console.log(vector.toString());
+            console.log(translation.toString());
+
+            this.redraw();
+         }
+
+         // Set up event listeners for scrolling and zooming
+         var mouse_state = {
+            "down": false,
+            "prevPos": null
+         };
+         // Need to store a reference to this object so that we can access it
+         // inside the event handlers
+         var thisGrid = this;
+         canvas.addEventListener("mousedown", function(e) {
+            mouse_state.down = true;
+         });
+         canvas.addEventListener("mouseup", function(e) {
+            mouse_state.down = false;
+         });
+         canvas.addEventListener("mouseleave", function(e) {
+            mouse_state.down = false;
+         });
+         canvas.addEventListener("mousemove", function(e) {
+            var x = e.offsetX;
+            var y = e.offsetY;
+
+            if (mouse_state.down && mouse_state.prevPos) {
+                var dx = x - mouse_state.prevPos[0];
+                var dy = y - mouse_state.prevPos[1];
+
+                var current_pos = thisGrid.fromCanvasCoords(x, y);
+                var prev_pos = thisGrid.fromCanvasCoords(mouse_state.prevPos[0],
+                                                         mouse_state.prevPos[1]);
+                thisGrid.translate(current_pos[0] - prev_pos[0],
+                                   current_pos[1] - prev_pos[1]);
+
+            }
+            mouse_state.prevPos = [x, y];
+         });
+    }
+
+    var canvas = document.createElement("canvas");
+    canvas.width = 600;
+    canvas.height = 600;
+
+    var grid = new Grid(canvas);
+
+    grid.drawGridlines();
+
+    grid.drawPolygon(4, 0, 0, 1, Math.PI / 4);
+    grid.drawShape([
+        [0, 0], [1, 0], [0, 1]
+    ]);
+    grid.drawParametricFunction(
+        function(t) {return [Math.cos(t), Math.sin(t)]},
+        [0, 2 * Math.PI]
+    );
+    grid.drawFunction(
+        function(x) {return Math.sin(x)},
+        [0, 2 * Math.PI]
+    );
+
+    console.log(grid.canvasCoords(0, 0));
+
+    document.body.appendChild(canvas);
+
+    </script>
+</body>
+
+</html>
