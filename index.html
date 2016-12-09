@@ -31,16 +31,16 @@
 
     function getFunction(n) {
         return function(t) {
-            // var r1 = Math.cos(n);
-            // var r2 = Math.sin(n);
-            // return [t + r1*Math.cos(t), r2 + r2*Math.sin(t)];
+            var r1 = Math.cos(n);
+            var r2 = Math.sin(n);
+            return [t + r1*Math.cos(t), r2 + r2*Math.sin(t)];
 
-            var sum = 0;
-            for (var j=0; j<=n; j++) {
-                sum += (Math.pow(-1, j) / factorial(2*j + 1)) * Math.pow(t, 2*j + 1);
-            }
+            // var sum = 0;
+            // for (var j=0; j<=n; j++) {
+            //     sum += (Math.pow(-1, j) / factorial(2*j + 1)) * Math.pow(t, 2*j + 1);
+            // }
 
-            return [t, sum];
+            // return [t, sum];
         };
     }
 
@@ -57,7 +57,24 @@
     //     }
     // }, 1, 10, 2)
 
-    var line = grid.addLine([4, 1], [0, 1], "blue", 3);
+    // var sin = grid.addFunction(function(x) {return Math.sin(x)},
+    //                            [-2*Math.PI, 2*Math.PI], "red");
+
+    var circle = grid.addParametricFunction(
+        function(t) {return [Math.cos(t), Math.sin(t)]},
+        [0, 2 * Math.PI], "red"
+    );
+
+    var t_id = null;
+    grid.runAnimation(function(n) {
+        var x = n;  // 2 * Math.PI * Math.sin(n);
+
+        if (t_id !== null) {
+            grid.removeObject(t_id);
+        }
+        t_id = grid.addTangent(circle, x, "blue");
+
+    }, 0, 100, 1);
 
     document.body.appendChild(canvas);
 

@@ -194,7 +194,11 @@ function Grid(cnv) {
      * Return the grid object with the given object ID
      */
     this.getObject = function(id) {
-        return grid_objects[id];
+        var o = grid_objects[id];
+        if (!o) {
+            throw "No object found with ID '" + id + "'";
+        }
+        return o;
     }
 
     /*
@@ -246,12 +250,33 @@ function Grid(cnv) {
         return this.addParametricFunction(para_func, domain, colour, width);
     }
 
+    /*
+     * Add a straight line in parametric form
+     */
     this.addLine = function(point, direction, colour, width) {
         if (direction[0] === 0 && direction[1] === 0) {
             throw "Invalid direction";
         }
         return this.addObject(LINE, {"point": point, "direction": direction}, colour,
                               width);
+    }
+
+    /*
+     * Add a tangent line to the function with the given object ID at (x, f(x))
+     * (or (f(x)[0], f(x)[1]) if f is a parametric function)
+     */
+    this.addTangent = function(function_id, x, colour, width) {
+        var obj = this.getObject(function_id);
+        if (obj.type !== FUNCTION) {
+            throw "Wrong object type";
+        }
+
+        var f = obj.data.function;
+        var p1 = f(x);
+        var p2 = f(x + settings.delta);
+
+        var direction = [p2[0] - p1[0], p2[1] - p1[1]];
+        return this.addLine(p1, direction, colour, width);
     }
 
     this.drawGridlines = function() {
