@@ -56,7 +56,7 @@ function Grid(cnv) {
         var p = new Matrix([[x], [y]]);
         var new_point = zoom_matrix.multiply(p).add(translation);
 
-        var coords = [new_point.entries[0][0], new_point.entries[1][0]];
+        var coords = [new_point.entry(0, 0), new_point.entry(1, 0)];
 
         return [coords[0] + 0.5 * canvas.width, -coords[1] + 0.5*canvas.height]
     }
@@ -69,11 +69,8 @@ function Grid(cnv) {
         y = -(y - 0.5*canvas.height);
 
         var p = new Matrix([[x], [y]]);
-        var new_point = zoom_matrix.inverse().multiply(p.add(translation.scale(-1)));
-
-        var coords = [new_point.entries[0][0], new_point.entries[1][0]];
-
-        return [coords[0], coords[1]];
+        var new_point = zoom_matrix.inverse().multiply(p.subtract(translation));
+        return [new_point.entry(0, 0), new_point.entry(1, 0)];
     }
 
     /*
@@ -234,7 +231,7 @@ function Grid(cnv) {
      */
      this.addParametricFunction = function(f, domain, colour, width) {
         return this.addObject(FUNCTION, {"function": f, "domain": domain}, colour,
-                       width);
+                              width);
      }
 
     /*
@@ -257,8 +254,8 @@ function Grid(cnv) {
         if (direction[0] === 0 && direction[1] === 0) {
             throw "Invalid direction";
         }
-        return this.addObject(LINE, {"point": point, "direction": direction}, colour,
-                              width);
+        return this.addObject(LINE, {"point": point, "direction": direction},
+                              colour, width);
     }
 
     /*
@@ -387,8 +384,8 @@ function Grid(cnv) {
 
        // Adjust translation so that the mouse stays at the same position
        // in the grid
-       var zoom_difference = new_zoom.add(zoom_matrix.scale(-1));
-       translation = translation.add(zoom_difference.multiply(w).scale(-1));
+       var zoom_difference = new_zoom.subtract(zoom_matrix);
+       translation = translation.subtract(zoom_difference.multiply(w));
        zoom_matrix = new_zoom;
 
        this.redraw();
