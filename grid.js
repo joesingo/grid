@@ -34,7 +34,8 @@ function Grid(cnv) {
     // Constants to represent the different types of grid object
     const SHAPE = "shape";
     const FUNCTION = "function";
-    var grid_object_types = [SHAPE, FUNCTION];
+    const LINE = "line";
+    var grid_object_types = [SHAPE, FUNCTION, LINE];
 
     var zoom_matrix = new Matrix([
         [100, 0],
@@ -85,7 +86,7 @@ function Grid(cnv) {
         ctx.beginPath();
 
         switch (grid_obj.type) {
-            case "shape":
+            case SHAPE:
                 // Draw a shape by drawing lines connecting the points in
                 // the points array
                 var points = grid_obj.data.points;
@@ -95,7 +96,7 @@ function Grid(cnv) {
                 }
                 break;
 
-            case "function":
+            case FUNCTION:
                 // Draw a parametric function by stepping through the domain
                 // and drawing a line connecting each point
                 var d = grid_obj.data;
@@ -104,6 +105,49 @@ function Grid(cnv) {
                     var coords = this.canvasCoords(point[0], point[1]);
                     ctx.lineTo(coords[0], coords[1]);
                 }
+                break;
+
+            case LINE:
+                var point = grid_obj.data.point;
+                var direction = grid_obj.data.direction;
+
+                // Calculate the real coordinates that map to the corners of the
+                // canvas
+                var top_left = thisGrid.fromCanvasCoords(0, 0);
+                var bottom_right = this.fromCanvasCoords(canvas.width,
+                                                         canvas.height);
+
+                var line_points = [];
+
+                // If the line is not vertical then we can convert it to
+                // y=mx + c form
+                if (direction[0] !== 0) {
+                    var m = direction[1] / direction[0];
+                    var c = point[1] - point[0] * m;
+
+                    var y0 = m * top_left[0] + c;
+                    var y1 = m * top_left[1] + c;
+
+                    // Work out the points on the line at the left and right
+                    // sides of the canvas
+                    line_points.push(this.canvasCoords(top_left[0], y0));
+                    line_points.push(this.canvasCoords(top_left[1], y1));
+                }
+                else {
+                    // If the line is vertical then just check if the x-coord
+                    // will be shown on the screen
+                    var x = this.canvasCoords(point[0], 0)[0];
+                    if (0 <= x && x <= canvas.width) {
+                        line_points.push([x, 0]);
+                        line_points.push([x, canvas.height]);
+                    }
+                }
+
+                // Draw the line
+                for (var i=0; i<line_points.length; i++) {
+                    ctx.lineTo(line_points[i][0], line_points[i][1]);
+                }
+
                 break;
         }
 
@@ -200,6 +244,14 @@ function Grid(cnv) {
         };
 
         return this.addParametricFunction(para_func, domain, colour, width);
+    }
+
+    this.addLine = function(point, direction, colour, width) {
+        if (direction[0] === 0 && direction[1] === 0) {
+            throw "Invalid direction";
+        }
+        return this.addObject(LINE, {"point": point, "direction": direction}, colour,
+                              width);
     }
 
     this.drawGridlines = function() {
