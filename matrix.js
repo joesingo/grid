@@ -72,6 +72,20 @@ function Matrix(entries) {
     }
 
     /*
+     * Return this - a
+     */
+    this.subtract = function(a) {
+        return this.add(a.scale(-1));
+    }
+
+    /*
+     * Return the (i,j)-entry of this matrix (indexed at 0)
+     */
+    this.entry = function(i, j) {
+        return entries[i][j]
+    }
+
+    /*
      * Return the Euclidean norm for a column vector (i.e. matrix with one
      * column)
      */
@@ -137,4 +151,8 @@ function Matrix(entries) {
         }
         return o;
     }
+}
+
+Matrix.vector = function(coords) {
+    return new Matrix([coords[0], coords[1]]);
 }
