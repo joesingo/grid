@@ -126,12 +126,12 @@ function Grid(cnv) {
                     var c = point[1] - point[0] * m;
 
                     var y0 = m * top_left[0] + c;
-                    var y1 = m * top_left[1] + c;
+                    var y1 = m * bottom_right[0] + c;
 
                     // Work out the points on the line at the left and right
                     // sides of the canvas
                     line_points.push(this.canvasCoords(top_left[0], y0));
-                    line_points.push(this.canvasCoords(top_left[1], y1));
+                    line_points.push(this.canvasCoords(bottom_right[0], y1));
                 }
                 else {
                     // If the line is vertical then just check if the x-coord
