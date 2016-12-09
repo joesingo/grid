@@ -153,6 +153,6 @@ function Matrix(entries) {
     }
 }
 
-Matrix.vector = function(coords) {
-    return new Matrix([coords[0], coords[1]]);
+Matrix.prototype.vector = function(coords) {
+    return new Matrix([[coords[0]], [coords[1]]]);
 }
