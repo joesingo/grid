@@ -49,6 +49,12 @@ function Grid(cnv) {
     var grid_objects = {};
     var current_id = 0;
 
+    // Keep track of how much the base zoom_matrix has been scaled, so that the
+    // spacing between grid lines can be adjusted when it gets too large/small.
+    // e.g 2 would mean base zoom has been doubled since grid lines were last
+    // re-calculated
+    var zoom_counter = 1;
+
     /*
      * Convert real coordinates to canvas coordinates
      */
@@ -270,7 +276,7 @@ function Grid(cnv) {
 
         var f = obj.data.function;
         var p1 = f(x);
-        var p2 = f(x + settings.delta);
+        var p2 = f(x + 0.0001);
 
         var direction = [p2[0] - p1[0], p2[1] - p1[1]];
         return this.addLine(p1, direction, colour, width);
@@ -291,8 +297,8 @@ function Grid(cnv) {
             var spacing = settings.gridLines[i].spacing;
 
             // Draw vertical lines
-            var start_x = Math.ceil(top_left[0] / spacing);
-            var end_x = Math.floor(bottom_right[0] / spacing);
+            var start_x = spacing * Math.ceil(top_left[0] / spacing);
+            var end_x = spacing * Math.floor(bottom_right[0] / spacing);
 
             for (var x=start_x; x<=end_x; x+=spacing) {
                 // y coord does not matter here
@@ -303,8 +309,8 @@ function Grid(cnv) {
             }
 
             // Draw horizontal lines
-            var end_y = Math.ceil(top_left[1] / spacing);
-            var start_y = Math.floor(bottom_right[1] / spacing);
+            var end_y = spacing * Math.ceil(top_left[1] / spacing);
+            var start_y = spacing * Math.floor(bottom_right[1] / spacing);
 
             for (var y=start_y; y<=end_y; y+=spacing) {
                 var coords = this.canvasCoords(0, y);
@@ -368,25 +374,38 @@ function Grid(cnv) {
 
     /*
      * Adjust the zoom matrix and translation. zoom_factor is percentage
-     * increase in zoom, e.g. 2 means 200% zoom.
+     * increase in zoom, e.g. 1 means increase zoom by 100%
      * The translation is adjusted so that the point that maps to
      * (mouse_x, mouse_y) remains the same.
      */
     this.zoom = function(zoom_factor, mouse_x, mouse_y) {
-       // Find the point that maps to the centre of the canvas
-       var q_coords = this.fromCanvasCoords(canvas.width / 2, canvas.height / 2);
-       var q = new Matrix([[q_coords[0]], [q_coords[1]]]);
+        // Find the point that maps to the centre of the canvas
+        var q_coords = this.fromCanvasCoords(canvas.width / 2, canvas.height / 2);
+        var q = new Matrix([[q_coords[0]], [q_coords[1]]]);
 
-       // Find point that maps onto the zoom point
-       var w_coords = this.fromCanvasCoords(mouse_x, mouse_y);
-       var w = new Matrix([[w_coords[0]], [w_coords[1]]]);
-       var new_zoom = zoom_matrix.scale(zoom_factor + 1);
+        // Find point that maps onto the zoom point
+        var w_coords = this.fromCanvasCoords(mouse_x, mouse_y);
+        var w = new Matrix([[w_coords[0]], [w_coords[1]]]);
+        var new_zoom = zoom_matrix.scale(zoom_factor + 1);
 
-       // Adjust translation so that the mouse stays at the same position
-       // in the grid
-       var zoom_difference = new_zoom.subtract(zoom_matrix);
-       translation = translation.subtract(zoom_difference.multiply(w));
-       zoom_matrix = new_zoom;
+        // Adjust translation so that the mouse stays at the same position
+        // in the grid
+        var zoom_difference = new_zoom.subtract(zoom_matrix);
+        translation = translation.subtract(zoom_difference.multiply(w));
+        zoom_matrix = new_zoom;
+
+        // Adjust grid line spacing if necessary
+        zoom_counter *= (zoom_factor + 1);
+        if (zoom_counter >= 2 || zoom_counter <= 0.5) {
+            var factor = (zoom_counter >= 2 ? 0.5 : 2);
+
+            for (var i in settings.gridLines) {
+                settings.gridLines[i].spacing *= factor;
+            }
+
+            // Reset zoom counter
+            zoom_counter *= factor;
+        }
 
        this.redraw();
     }
