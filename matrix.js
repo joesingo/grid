@@ -82,7 +82,7 @@ function Matrix(entries) {
      * Return the (i,j)-entry of this matrix (indexed at 0)
      */
     this.entry = function(i, j) {
-        return entries[i][j]
+        return this.entries[i][j]
     }
 
     /*
@@ -153,6 +153,9 @@ function Matrix(entries) {
     }
 }
 
-Matrix.prototype.vector = function(coords) {
-    return new Matrix([[coords[0]], [coords[1]]]);
+/*
+ * Return a Matrix object representing the column vector <u, v>
+ */
+Matrix.prototype.vector = function(u, v) {
+    return new Matrix([[u], [v]]);
 }
