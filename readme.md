@@ -15,22 +15,25 @@ To use `grid.js`, you create a Grid object, passing a canvas as a parameter. For
 
 Adding objects to the grid is done by calling various methods, e.g. `addShape()`, `addFunction()` etc... Each of these methods returns an *object ID* that can then be used as a handle to remove or edit the object using `removeObject()` or `getObject()`.
 
-The methods to add object to the grid take a colour and line width (in pixels) as their final two parameters, but default values will be used if they are not provided.
+The methods to add object to the grid take a style object as their final parameter, but default values will be used if this is not provided. The style object may have the following fields:
+
+* `colour`: The colour in hex format (defaults to a pinkish red)
+* `line_width`: The line width in pixels (defaults to 2px)
+* `fill`: Boolean for whether to fill in the object or just draw outline (defaults to false)
 
 ## Shapes ##
-To add a shape, use `grid.addShape(point, colour, width)`. A shape is represented as an array of points, where each points is an array containing 2 coordinates. For example, to add red triangle:
+To add a shape, use `grid.addShape(point, style)`. A shape is represented as an array of points, where each points is an array containing 2 coordinates. For example, to add a triangle:
 ```javascript
 var points = [
     [0, 0], [2, 0], [1, 1]
 ];
-var triangle = grid.addShape(points, "red");
+var triangle = grid.addShape(points);
 ```
-Currently filled shapes are not supported.
 
-To add a regular polygon, use `grid.addPolygon(sides, center_x, center_y, radius, rotation, colour, width)`. The rotation is specifed as an anti-clockwise angle in radians.
+To add a regular polygon, use `grid.addPolygon(sides, center_x, center_y, radius, rotation, style)`. The rotation is specifed as an anti-clockwise angle in radians.
 
 ## Functions ##
-To draw a function, there are two methods: `grid.addFunction(func, domain, colour, width)`, and `grid.addParametricFunction(func, domain, colour, width)`.
+To draw a function, there are two methods: `grid.addFunction(func, domain, style)`, and `grid.addParametricFunction(func, domain, style)`.
 
 Currently only interval domains are supported. `domain` should be an array of the form `[a, b]` where `a` is the left point of the interval and `b` is the right point.
 
@@ -61,9 +64,9 @@ var circle = grid.addParametricFunction(
 **Note:** When using `addFunction()` the function is converted to a parametric function internally, so be aware of this when using `getObject()` to edit a function added using `addFunction()`.
 
 ## Lines ##
-A straight line can be added using `grid.addLine(point, direction, colour, width)`. Here `point` is an array `[u, v]` that is a point one the line, and `direction` is an array `[f, g]` that describes the direction of the line. The line will stretch infinitely - to draw a line segment use `addShape()` instead.
+A straight line can be added using `grid.addLine(point, direction, style)`. Here `point` is an array `[u, v]` that is a point one the line, and `direction` is an array `[f, g]` that describes the direction of the line. The line will stretch infinitely - to draw a line segment use `addShape()` instead.
 
-To add a tangent line to a function, there is `addTangent(funcion_id, x, colour, width)`. Here `function_id` is the object ID returned by `addFunction()` or `addParametricFunction()`. The line drawn will be tangent to the function at the point `(x, f(x))`, or `(f(x)[0], f(x)[1])` if the function is parametric.
+To add a tangent line to a function, there is `addTangent(funcion_id, x, style)`. Here `function_id` is the object ID returned by `addFunction()` or `addParametricFunction()`. The line drawn will be tangent to the function at the point `(x, f(x))`, or `(f(x)[0], f(x)[1])` if the function is parametric.
 
 For example, from the previous examples:
 
@@ -79,8 +82,8 @@ An object can be edited by first retrieving the object using `grid.getObject(obj
 
 The object returned from `getObject()` has the following fields:
 
-* `colour`: The colour of the object in hex format.
-* `line_width`: The line width of the object in pixels.
+* `style`: The style JS object for this object
+
 * `data`: This stores the actual info about the object, and the fields in here depend on the type of object.
 
     * **Shapes:**

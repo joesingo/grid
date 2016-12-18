@@ -7,11 +7,6 @@ function Grid(cnv) {
         // The step size to go up in when plotting functions
         "delta": 0.02,
 
-        "shapes": {
-            "colour": "#ee0155",
-            "width": 2
-        },
-
         "gridLines": {
             "major": {
                 "spacing": 1,
@@ -28,6 +23,12 @@ function Grid(cnv) {
         "axes": {
             "colour": "black",
             "width": 2
+        },
+
+        "defaultStyle": {
+            "colour": "#ee0155",
+            "line_width": 2,
+            "fill": false
         }
     }
 
@@ -83,9 +84,6 @@ function Grid(cnv) {
      * Draw a grid object onto the canvas
      */
     this.drawObject = function(grid_obj) {
-        ctx.strokeStyle = grid_obj.colour;
-        ctx.lineWidth = grid_obj.line_width;
-
         ctx.beginPath();
 
         switch (grid_obj.type) {
@@ -160,14 +158,22 @@ function Grid(cnv) {
                 break;
         }
 
-        ctx.stroke();
+        if (grid_obj.style.fill) {
+            ctx.fillStyle = grid_obj.style.colour;
+            ctx.fill();
+        }
+        else {
+            ctx.strokeStyle = grid_obj.style.colour;
+            ctx.lineWidth = grid_obj.style.line_width;
+            ctx.stroke();
+        }
     }
 
     /*
      * Create a JS object to represent a grid object (e.g. shape, function),
      * add it to the list of grid objects, and draw it.
      */
-    this.addObject = function(type, data, colour, line_width) {
+    this.addObject = function(type, data, style) {
         if (grid_object_types.indexOf(type) < 0) {
             throw "Invalid type '" + type + "'";
             return;
@@ -176,10 +182,19 @@ function Grid(cnv) {
         var obj = {};
         obj.type = type;
         obj.data = data;
-        obj.colour = colour || settings.shapes.colour;
-        obj.line_width = line_width || settings.shapes.width;
+        obj.style = {};
 
-        // Add the objet to the list
+        // Copy default styles in
+        for (var i in settings.defaultStyle) {
+            obj.style[i] = settings.defaultStyle[i];
+        }
+
+        // Copy custom styles in
+        for (var i in style) {
+            obj.style[i] = style[i];
+        }
+
+        // Add the object to the list
         var id = current_id;
         grid_objects[id] = obj;
         current_id++;
@@ -219,8 +234,8 @@ function Grid(cnv) {
      * Add a shape that is represented by an array of points to connect with
      * straight lines
      */
-    this.addShape = function(points, colour, width) {
-        return this.addObject(SHAPE, {"points": points}, colour, width);
+    this.addShape = function(points, style) {
+        return this.addObject(SHAPE, {"points": points}, style);
     }
 
     /*
@@ -228,7 +243,7 @@ function Grid(cnv) {
      * where radius is the distance from each vertex to the center.
      * Rotation is the anti-clockwise rotation in radians.
      */
-    this.addPolygon = function(n, cx, cy, radius, rotation, colour, width) {
+    this.addPolygon = function(n, cx, cy, radius, rotation, style) {
         var points = [];
 
         for (var i=0; i<=n; i++) {
@@ -239,47 +254,47 @@ function Grid(cnv) {
             points.push([x, y]);
         }
 
-        return this.addShape(points, colour, width);
+        return this.addShape(points, style);
     }
 
     /*
      * Similar to addFunction() below, but where f is a parametric function,
      * i.e. (x, y) = f(t)
      */
-     this.addParametricFunction = function(f, domain, colour, width) {
-        return this.addObject(FUNCTION, {"function": f, "domain": domain}, colour,
-                              width);
+     this.addParametricFunction = function(f, domain, style) {
+        return this.addObject(FUNCTION, {"function": f, "domain": domain}, style);
      }
 
     /*
      * Add the function f over the specified domain (2-array of end points)
      */
-    this.addFunction = function(f, domain, colour, width) {
+    this.addFunction = function(f, domain, style) {
         // Create a parametric version of this function so that we can use
         // one method to draw both regular and parametric functions
         var para_func = function(x) {
             return [x, f(x)];
         };
 
-        return this.addParametricFunction(para_func, domain, colour, width);
+        return this.addParametricFunction(para_func, domain, style);
     }
 
     /*
      * Add a straight line in parametric form
      */
-    this.addLine = function(point, direction, colour, width) {
+    this.addLine = function(point, direction, style) {
         if (direction[0] === 0 && direction[1] === 0) {
             throw "Invalid direction";
         }
+
         return this.addObject(LINE, {"point": point, "direction": direction},
-                              colour, width);
+                              style);
     }
 
     /*
      * Add a tangent line to the function with the given object ID at (x, f(x))
      * (or (f(x)[0], f(x)[1]) if f is a parametric function)
      */
-    this.addTangent = function(function_id, x, colour, width) {
+    this.addTangent = function(function_id, x, style) {
         var obj = this.getObject(function_id);
         if (obj.type !== FUNCTION) {
             throw "Wrong object type";
@@ -290,7 +305,7 @@ function Grid(cnv) {
         var p2 = f(x + 0.0001);
 
         var direction = [p2[0] - p1[0], p2[1] - p1[1]];
-        return this.addLine(p1, direction, colour, width);
+        return this.addLine(p1, direction, style);
     }
 
     this.drawGridlines = function() {
