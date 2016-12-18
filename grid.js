@@ -195,6 +195,11 @@ function Grid(cnv) {
      * Remove the object with the specified object ID
      */
     this.removeObject = function(id) {
+        var o = grid_objects[id];
+        if (!o) {
+            throw "No object found with ID '" + id + "'";
+        }
+
         delete grid_objects[id];
         this.redraw();
     }
