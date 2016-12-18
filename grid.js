@@ -443,6 +443,10 @@ function Grid(cnv) {
                 thisGrid.redraw();
                 window.requestAnimationFrame(loop);
             }
+            else {
+                drawing_function(n1);
+                thisGrid.redraw();
+            }
         }
         window.requestAnimationFrame(loop);
     }
