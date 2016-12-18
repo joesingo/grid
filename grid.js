@@ -93,10 +93,16 @@ function Grid(cnv) {
                 // Draw a shape by drawing lines connecting the points in
                 // the points array
                 var points = grid_obj.data.points;
-                for (var i=0; i<points.length; i++) {
+
+                var start = this.canvasCoords(points[0][0], points[0][1]);
+                ctx.moveTo(start[0], start[1]);
+
+                for (var i=1; i<points.length; i++) {
                     var coords = this.canvasCoords(points[i][0], points[i][1]);
                     ctx.lineTo(coords[0], coords[1]);
                 }
+
+                ctx.lineTo(start[0], start[1]);
                 break;
 
             case FUNCTION:
