@@ -76,7 +76,7 @@ var tangent2 = grid.addTangent(circle, 0);
 ```
 
 ## Editing and removing objects ##
-Removing an object is done with `grid.removeObject(object_id)`.
+Removing an object is done with `grid.removeObject(object_id)`, followed by `grid.redraw()`.
 
 An object can be edited by first retrieving the object using `grid.getObject(object_id)`, and then redrawing the grid with `grid.redraw()`.
 

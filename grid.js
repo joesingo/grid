@@ -216,7 +216,6 @@ function Grid(cnv) {
         }
 
         delete grid_objects[id];
-        this.redraw();
     }
 
     /*
