@@ -492,29 +492,30 @@ function Grid(cnv) {
        mouse_state.down = false;
     });
     canvas.addEventListener("mousemove", function(e) {
-       var x = e.offsetX;
-       var y = e.offsetY;
+        var x = e.offsetX;
+        var y = e.offsetY;
 
-       if (mouse_state.down && mouse_state.prevPos) {
-           var dx = x - mouse_state.prevPos[0];
-           var dy = y - mouse_state.prevPos[1];
+        if (mouse_state.down && mouse_state.prevPos) {
+            var dx = x - mouse_state.prevPos[0];
+            var dy = y - mouse_state.prevPos[1];
 
-           var current_pos = thisGrid.fromCanvasCoords(x, y);
-           var prev_pos = thisGrid.fromCanvasCoords(mouse_state.prevPos[0],
+            var current_pos = thisGrid.fromCanvasCoords(x, y);
+            var prev_pos = thisGrid.fromCanvasCoords(mouse_state.prevPos[0],
                                                     mouse_state.prevPos[1]);
-           thisGrid.translate(current_pos[0] - prev_pos[0],
-                              current_pos[1] - prev_pos[1]);
+            thisGrid.translate(current_pos[0] - prev_pos[0],
+                               current_pos[1] - prev_pos[1]);
 
-       }
-       mouse_state.prevPos = [x, y];
+        }
+        mouse_state.prevPos = [x, y];
     });
     canvas.addEventListener("mousewheel", function(e) {
-       var x = e.offsetX;
-       var y = e.offsetY;
+        e.preventDefault();
+        var x = e.offsetX;
+        var y = e.offsetY;
 
-       zoom_factor = 0.001 * e.wheelDelta;
+        zoom_factor = 0.001 * e.wheelDelta;
 
-       thisGrid.zoom(zoom_factor, x, y);
+        thisGrid.zoom(zoom_factor, x, y);
     });
 
     this.redraw();
