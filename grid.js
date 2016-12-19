@@ -117,6 +117,14 @@ function Grid(cnv) {
                     var coords = this.canvasCoords(point[0], point[1]);
                     ctx.lineTo(coords[0], coords[1]);
                 }
+
+                // Draw point at end point of domain, since this will not happen
+                // unless the width of the domain happens to be a multiple of
+                // delta
+                var point = d.function(d.domain[1]);
+                var coords = this.canvasCoords(point[0], point[1]);
+                ctx.lineTo(coords[0], coords[1])
+
                 break;
 
             case LINE:
