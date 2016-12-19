@@ -220,6 +220,15 @@ function Grid(cnv) {
     }
 
     /*
+     * Remove all objects
+     */
+    this.removeAll = function() {
+        for (var i in grid_objects) {
+            this.removeObject(i);
+        }
+    }
+
+    /*
      * Return the grid object with the given object ID
      */
     this.getObject = function(id) {
