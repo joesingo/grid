@@ -10,19 +10,24 @@ function Grid(cnv) {
         "gridLines": {
             "major": {
                 "spacing": 1,
-                "colour": "black",
+                "colour": "#555",
                 "width": 1
             },
             "minor": {
-                "spacing": 0.5,
-                "colour": "gray",
-                "width": 1
+                "spacing": 0.2,
+                "colour": "#777",
+                "width": 0.5
             }
         },
 
         "axes": {
             "colour": "black",
             "width": 2
+        },
+
+        "border": {
+            "colour": "black",
+            "width": 5
         },
 
         "defaultStyle": {
@@ -334,6 +339,8 @@ function Grid(cnv) {
             var start_x = spacing * Math.ceil(top_left[0] / spacing);
             var end_x = spacing * Math.floor(bottom_right[0] / spacing);
 
+            ctx.beginPath();
+
             for (var x=start_x; x<=end_x; x+=spacing) {
                 // y coord does not matter here
                 var coords = this.canvasCoords(x, 0);
@@ -351,9 +358,10 @@ function Grid(cnv) {
                 ctx.moveTo(0, coords[1]);
                 ctx.lineTo(canvas.width, coords[1]);
             }
+
+            ctx.stroke();
         }
 
-        ctx.stroke();
      }
 
      /*
@@ -383,8 +391,8 @@ function Grid(cnv) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw border
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = settings.border.colour;
+        ctx.lineWidth = settings.border.width;
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
         this.drawGridlines();
