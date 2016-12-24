@@ -33,7 +33,9 @@ function Grid(cnv) {
         "defaultStyle": {
             "colour": "#ee0155",
             "line_width": 2,
-            "fill": false
+            "fill": false,
+            "font": "Arial",
+            "font_size": 25
         }
     }
 
@@ -41,7 +43,12 @@ function Grid(cnv) {
     const SHAPE = "shape";
     const FUNCTION = "function";
     const LINE = "line";
-    var grid_object_types = [SHAPE, FUNCTION, LINE];
+    const TEXT = "text";
+    var grid_object_types = [SHAPE, FUNCTION, LINE, TEXT];
+
+    var text_alignments = [
+        "left", "center", "right"
+    ];
 
     var zoom_matrix = new Matrix([
         [100, 0],
@@ -90,6 +97,9 @@ function Grid(cnv) {
      */
     this.drawObject = function(grid_obj) {
         ctx.beginPath();
+
+        ctx.fillStyle = grid_obj.style.colour;
+        ctx.strokeStyle = grid_obj.style.colour;
 
         switch (grid_obj.type) {
             case SHAPE:
@@ -169,14 +179,20 @@ function Grid(cnv) {
                 }
 
                 break;
+
+            case TEXT:
+                ctx.textBaseline = "middle";
+                ctx.textAlign = grid_obj.data.alignment;
+                ctx.font = grid_obj.style.font_size + "px " + grid_obj.style.font;
+
+                var coords = this.canvasCoords(grid_obj.data.x, grid_obj.data.y);
+                ctx.fillText(grid_obj.data.text, coords[0], coords[1]);
         }
 
         if (grid_obj.style.fill) {
-            ctx.fillStyle = grid_obj.style.colour;
             ctx.fill();
         }
         else {
-            ctx.strokeStyle = grid_obj.style.colour;
             ctx.lineWidth = grid_obj.style.line_width;
             ctx.stroke();
         }
@@ -327,6 +343,21 @@ function Grid(cnv) {
 
         var direction = [p2[0] - p1[0], p2[1] - p1[1]];
         return this.addLine(p1, direction, style);
+    }
+
+    /*
+     * Add a label at the specifed coordinates. alignment is one of the strings
+     * in the text_alignments array
+     */
+    this.addText = function(text, x, y, alignment, style) {
+        alignment = alignment.toLowerCase();
+
+        if (text_alignments.indexOf(alignment) < 0) {
+            throw "Invalid alignment - must be one of " + text_alignments.join(", ");
+        }
+
+        return this.addObject(TEXT, {"text": text, "x": x, "y": y,
+                                     "alignment": alignment}, style);
     }
 
     this.drawGridlines = function() {
