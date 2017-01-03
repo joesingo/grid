@@ -147,6 +147,56 @@ grid.runAnimation(
 );
 ```
 
+## Grid settings ##
+Most grid settings can be changed by accessing the `settings` attribute of the Grid object, e.g.
+
+```javascript
+grid.settings.border.width = 4;
+```
+
+Here is the full list of available settings and their default values:
+
+```javascript
+{
+    "delta": 0.02,  // The step size to go up in when plotting functions
+
+    "grid_lines": {
+        "major": {
+            "spacing": 1,
+            "colour": "#555",
+            "width": 1
+        },
+        "minor": {
+            "spacing": 0.2,
+            "colour": "#777",
+            "width": 0.5
+        }
+    },
+
+    "axes": {
+        "colour": "black",
+        "width": 2
+    },
+
+    "border": {
+        "colour": "black",
+        "width": 5
+    },
+
+    "default_style": {
+        "colour": "#ee0155",
+        "line_width": 2,
+        "fill": false,
+        "font": "Arial",
+        "font_size": 25
+    },
+
+    "zoom_enabled": true,
+
+    "scroll_enabled": true
+    }
+```
+
 ## Helper methods ##
 `grid.js` is not very comprehensive, so for most applications there will probably be things you want to do that are not possible using just the methods described above. You can of course draw directly onto the canvas yourself, and the following methods are available to facilitate this:
 

@@ -3,11 +3,11 @@ function Grid(cnv) {
     var canvas = cnv;
     var ctx = canvas.getContext("2d");
 
-    var settings = {
+    this.settings = {
         // The step size to go up in when plotting functions
         "delta": 0.02,
 
-        "gridLines": {
+        "grid_lines": {
             "major": {
                 "spacing": 1,
                 "colour": "#555",
@@ -30,13 +30,17 @@ function Grid(cnv) {
             "width": 5
         },
 
-        "defaultStyle": {
+        "default_style": {
             "colour": "#ee0155",
             "line_width": 2,
             "fill": false,
             "font": "Arial",
             "font_size": 25
-        }
+        },
+
+        "zoom_enabled": true,
+
+        "scroll_enabled": true
     }
 
     // Constants to represent the different types of grid object
@@ -122,7 +126,7 @@ function Grid(cnv) {
                 // Draw a parametric function by stepping through the domain
                 // and drawing a line connecting each point
                 var d = grid_obj.data;
-                for (var t=d.domain[0]; t<=d.domain[1]; t+=settings.delta) {
+                for (var t=d.domain[0]; t<=d.domain[1]; t+=this.settings.delta) {
                     var point = d.function(t);
                     var coords = this.canvasCoords(point[0], point[1]);
                     ctx.lineTo(coords[0], coords[1]);
@@ -214,8 +218,8 @@ function Grid(cnv) {
         obj.style = {};
 
         // Copy default styles in
-        for (var i in settings.defaultStyle) {
-            obj.style[i] = settings.defaultStyle[i];
+        for (var i in this.settings.default_style) {
+            obj.style[i] = this.settings.default_style[i];
         }
 
         // Copy custom styles in
@@ -368,11 +372,11 @@ function Grid(cnv) {
         var top_left = thisGrid.fromCanvasCoords(0, 0);
         var bottom_right = this.fromCanvasCoords(canvas.width, canvas.height);
 
-        for (var i in settings.gridLines) {
-            ctx.strokeStyle = settings.gridLines[i].colour;
-            ctx.lineWidth = settings.gridLines[i].width;
+        for (var i in this.settings.grid_lines) {
+            ctx.strokeStyle = this.settings.grid_lines[i].colour;
+            ctx.lineWidth = this.settings.grid_lines[i].width;
 
-            var spacing = settings.gridLines[i].spacing;
+            var spacing = this.settings.grid_lines[i].spacing;
 
             // Draw vertical lines
             var start_x = spacing * Math.ceil(top_left[0] / spacing);
@@ -413,8 +417,8 @@ function Grid(cnv) {
 
         if ((x >= 0 && x <= canvas.width) || (y >=0 && y <= canvas.height)) {
             ctx.beginPath();
-            ctx.strokeStyle = settings.axes.colour;
-            ctx.lineWidth = settings.axes.width;
+            ctx.strokeStyle = this.settings.axes.colour;
+            ctx.lineWidth = this.settings.axes.width;
             ctx.moveTo(0, y);
             ctx.lineTo(canvas.width, y);
             ctx.moveTo(x, 0);
@@ -430,8 +434,8 @@ function Grid(cnv) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw border
-        ctx.strokeStyle = settings.border.colour;
-        ctx.lineWidth = settings.border.width;
+        ctx.strokeStyle = this.settings.border.colour;
+        ctx.lineWidth = this.settings.border.width;
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
         this.drawGridlines();
@@ -446,11 +450,15 @@ function Grid(cnv) {
      * Adjust the translation by the vector <u, v>
      */
     this.translate = function(u, v) {
-       var w = new Matrix([[u], [v]]);
-       var vector = zoom_matrix.multiply(w);
-       translation = translation.add(vector);
+        if (!this.settings.scroll_enabled) {
+            return;
+        }
 
-       this.redraw();
+        var w = new Matrix([[u], [v]]);
+        var vector = zoom_matrix.multiply(w);
+        translation = translation.add(vector);
+
+        this.redraw();
      }
 
     /*
@@ -460,6 +468,10 @@ function Grid(cnv) {
      * (mouse_x, mouse_y) remains the same.
      */
     this.zoom = function(zoom_factor, mouse_x, mouse_y) {
+        if (!this.settings.zoom_enabled) {
+            return;
+        }
+
         // Find the point that maps to the centre of the canvas
         var q_coords = this.fromCanvasCoords(canvas.width / 2, canvas.height / 2);
         var q = new Matrix([[q_coords[0]], [q_coords[1]]]);
@@ -480,8 +492,8 @@ function Grid(cnv) {
         if (zoom_counter >= 2 || zoom_counter <= 0.5) {
             var factor = (zoom_counter >= 2 ? 0.5 : 2);
 
-            for (var i in settings.gridLines) {
-                settings.gridLines[i].spacing *= factor;
+            for (var i in this.settings.grid_lines) {
+                this.settings.grid_lines[i].spacing *= factor;
             }
 
             // Reset zoom counter
