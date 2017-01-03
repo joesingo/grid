@@ -37,11 +37,15 @@ To add a regular polygon, use `grid.addPolygon(sides, center_x, center_y, radius
 ## Functions ##
 To draw a function, there are two methods: `grid.addFunction(func, domain, style)`, and `grid.addParametricFunction(func, domain, style)`.
 
-Currently only interval domains are supported. `domain` should be an array of the form `[a, b]` where `a` is the left point of the interval and `b` is the right point.
+Currently only interval domains are supported. `domain` should be an object of the form `{"interval": [a, b]}` where `a` is the left point of the interval and `b` is the right point.
+
+To only draw the function at integer points, you set `integer_points` to `true` in the domain object. In this case the points are joined together straight lines.
 
 In the case of `addFunction()`, `func` is a function that returns a number given a number between `a` and `b` as an argument.
 
 For `addParametricFunction()`, `func` should return an array `[x, y]` given a number between `a` and `b`.
+
+To skip a point in the domain, `func` can return `null`.
 
 For example, adding a sine wave:
 ```javascript

@@ -126,18 +126,49 @@ function Grid(cnv) {
                 // Draw a parametric function by stepping through the domain
                 // and drawing a line connecting each point
                 var d = grid_obj.data;
-                for (var t=d.domain[0]; t<=d.domain[1]; t+=this.settings.delta) {
-                    var point = d.function(t);
-                    var coords = this.canvasCoords(point[0], point[1]);
-                    ctx.lineTo(coords[0], coords[1]);
+
+                var start = d.domain.interval[0];
+                var end = d.domain.interval[1];
+                var step = this.settings.delta;
+
+                if (d.domain.integer_points) {
+                    start = Math.ceil(start);
+                    end = Math.floor(end);
+                    step = 1;
                 }
 
-                // Draw point at end point of domain, since this will not happen
-                // unless the width of the domain happens to be a multiple of
-                // delta
-                var point = d.function(d.domain[1]);
-                var coords = this.canvasCoords(point[0], point[1]);
-                ctx.lineTo(coords[0], coords[1])
+                // Keep track of when a point in the domain has been skipped
+                // (i.e. func returned null) so that we can do moveTo instead
+                // of lineTo
+                var skipped_point = false;
+
+                for (var t=start; t<=end; t+=step) {
+                    var point = d.function(t);
+
+                    if (point === null || point[1] === null) {
+                        skipped_point = true;
+                        continue;
+                    }
+
+                    var coords = this.canvasCoords(point[0], point[1]);
+
+                    if (skipped_point) {
+                        ctx.moveTo(coords[0], coords[1]);
+                        skipped_point = false;
+                    }
+                    else {
+                        ctx.lineTo(coords[0], coords[1]);
+                    }
+                }
+
+                if (!d.domain.integer_points) {
+                    // Draw point at end point of domain, since this will not happen
+                    // unless the width of the domain happens to be a multiple of
+                    // delta
+                    var point = d.function(end);
+                    var coords = this.canvasCoords(point[0], point[1]);
+                    ctx.lineTo(coords[0], coords[1])
+                }
 
                 break;
 
@@ -303,6 +334,15 @@ function Grid(cnv) {
      * i.e. (x, y) = f(t)
      */
      this.addParametricFunction = function(f, domain, style) {
+        // Validate interval
+        if (domain.interval.length !== 2) {
+            throw "Invalid interval - must be an array of length 2";
+        }
+
+        if (domain.interval[0] > domain.interval[1]) {
+            throw "Invalid interval - start point must be smaller than end point";
+        }
+
         return this.addObject(FUNCTION, {"function": f, "domain": domain}, style);
      }
 
