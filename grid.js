@@ -54,11 +54,12 @@ function Grid(cnv) {
 
     // Constants to represent the different types of grid object
     const SHAPE = "shape";
+    const CIRCLE = "circle";
     const FUNCTION = "function";
     const LINE = "line";
     const TEXT = "text";
     const IMAGE = "image";
-    var grid_object_types = [SHAPE, FUNCTION, LINE, TEXT, IMAGE];
+    var grid_object_types = [SHAPE, CIRCLE, FUNCTION, LINE, TEXT, IMAGE];
 
     var text_alignments = [
         "left", "center", "right"
@@ -139,6 +140,16 @@ function Grid(cnv) {
                 }
 
                 ctx.lineTo(start[0], start[1]);
+                break;
+
+            case CIRCLE:
+                // A circle can be accomplished with a parametric function but
+                // being a seperate type is more user friendly and probably
+                // quicker to draw
+                var d = grid_obj.data;
+                var coords = this.canvasCoords(d.x, d.y);
+                var radius = d.radius / this.getUnitsToPx();
+                ctx.arc(coords[0], coords[1], radius, 0, 2 * Math.PI);
                 break;
 
             case FUNCTION:
@@ -368,6 +379,10 @@ function Grid(cnv) {
         }
 
         return this.addShape(points, style);
+    }
+
+    this.addCircle = function(x, y, radius, style) {
+        return this.addObject(CIRCLE, {"x": x, "y": y, "radius": radius}, style);
     }
 
     /*

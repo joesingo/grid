@@ -34,6 +34,12 @@ var triangle = grid.addShape(points);
 
 To add a regular polygon, use `grid.addPolygon(sides, center_x, center_y, radius, rotation, style)`. The rotation is specifed as an anti-clockwise angle in radians.
 
+## Circles ##
+A circle can be drawn with `grid.addCircle(x, y, radius, style)`. For example:
+```javascript
+var circle = grid.addCircle(2, 2, 0.5, {"colour": "green", "fill": true});
+```
+
 ## Functions ##
 To draw a function, there are two methods: `grid.addFunction(func, domain, style)`, and `grid.addParametricFunction(func, domain, style)`.
 
