@@ -210,13 +210,23 @@ Here is the full list of available settings and their default values:
         "font_size": 25
     },
 
-    "zoom_enabled": true,
+    "zoom": {
+        "enabled": true,
+        "callback": null
+    },
 
-    "scroll_enabled": true
+    "scroll": {
+        "enabled": true,
+        "callback": null
     }
+}
 ```
 
 Calling `grid.redraw()` may be required after changing some of these settings.
+
+`zoom.callback` is a callback function that is called when the grid is zoomed in or out. It is passed the same arguments as the `zoom()` method described below.
+
+Similarly `scoll.callback` is a callback for when the grid is scrolled, and is passed the same arguments as `translate()` below.
 
 ## Helper methods ##
 `grid.js` is not very comprehensive, so for most applications there will probably be things you want to do that are not possible using just the methods described above. You can of course draw directly onto the canvas yourself, and the following methods are available to facilitate this:

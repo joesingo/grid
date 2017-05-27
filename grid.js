@@ -41,9 +41,15 @@ function Grid(cnv) {
             "font_size": 25
         },
 
-        "zoom_enabled": true,
+        "zoom": {
+            "enabled": true,
+            "callback": null
+        },
 
-        "scroll_enabled": true
+        "scroll": {
+            "enabled": true,
+            "callback": null
+        }
     }
 
     // Constants to represent the different types of grid object
@@ -526,13 +532,17 @@ function Grid(cnv) {
      * Adjust the translation by the vector <u, v>
      */
     this.translate = function(u, v) {
-        if (!this.settings.scroll_enabled) {
+        if (!this.settings.scroll.enabled) {
             return;
         }
 
         var w = new Matrix([[u], [v]]);
         var vector = zoom_matrix.multiply(w);
         translation = translation.add(vector);
+
+        if (this.settings.scroll.callback) {
+            this.settings.scroll.callback(u, v);
+        }
 
         this.redraw();
      }
@@ -544,7 +554,7 @@ function Grid(cnv) {
      * (mouse_x, mouse_y) remains the same.
      */
     this.zoom = function(zoom_factor, mouse_x, mouse_y) {
-        if (!this.settings.zoom_enabled) {
+        if (!this.settings.zoom.enabled) {
             return;
         }
 
@@ -576,7 +586,11 @@ function Grid(cnv) {
             zoom_counter *= factor;
         }
 
-       this.redraw();
+        if (this.settings.zoom.callback) {
+            this.settings.zoom.callback(zoom_factor, mouse_x, mouse_y);
+        }
+
+        this.redraw();
     }
 
     /*
