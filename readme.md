@@ -242,3 +242,5 @@ Similarly `scoll.callback` is a callback for when the grid is scrolled, and is p
 * `zoom(zoom_factor, x, y)` zooms the grid by an amount described by `zoom_factor` about the point `(x, y)`. `zoom_factor` is the percentage increase in zoom level - e.g. 1 means increase zoom by 100%, 0.5 means increase zoom by 50% etc...
 
   `(x, y)` is the 'center' of the zoom - this means that the point `(x, y)` will map to the same canvas coordinates after the zoom.
+
+* `getUnitsToPx()` returns an array containing the grid unit to pixel ratios in the x and y directions

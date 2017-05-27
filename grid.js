@@ -107,6 +107,13 @@ function Grid(cnv) {
     }
 
     /*
+     * Return the grid units to pixel ratio for each dimension
+     */
+    this.getUnitsToPx = function() {
+        return [1 / zoom_matrix.entry(0, 0), 1 / zoom_matrix.entry(1, 1)];
+    }
+
+    /*
      * Draw a grid object onto the canvas
      */
     this.drawObject = function(grid_obj) {
