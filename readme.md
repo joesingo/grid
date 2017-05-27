@@ -53,17 +53,15 @@ var sine = grid.addFunction(
     function(x) {
         return Math.sin(x);
     },
-    [-2 * Math.PI, 2 * Math.PI]
+    {"interval": [-2 * Math.PI, 2 * Math.PI]}
 );
 ```
 
-Adding a circle:
+Drawing a blue spiral:
 ```javascript
-var circle = grid.addParametricFunction(
-    function(t) {
-        return [Math.cos(t), Math.sin(t)];
-    },
-    [0, 2 * Math.PI]
+var spiral = grid.addParametricFunction(
+    function(t) {return [0.2 * t * Math.cos(t), 0.2 * t * Math.sin(t)]},
+    {"interval": [0, 10 * Math.PI]}, {"colour": "blue"}
 );
 ```
 
