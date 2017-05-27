@@ -243,4 +243,4 @@ Similarly `scoll.callback` is a callback for when the grid is scrolled, and is p
 
   `(x, y)` is the 'center' of the zoom - this means that the point `(x, y)` will map to the same canvas coordinates after the zoom.
 
-* `getUnitsToPx()` returns an array containing the grid unit to pixel ratios in the x and y directions
+* `getUnitsToPx()` returns the grid unit to pixel ratio

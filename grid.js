@@ -107,10 +107,12 @@ function Grid(cnv) {
     }
 
     /*
-     * Return the grid units to pixel ratio for each dimension
+     * Return the grid units to pixel ratio
      */
     this.getUnitsToPx = function() {
-        return [1 / zoom_matrix.entry(0, 0), 1 / zoom_matrix.entry(1, 1)];
+        // Note: Currently you cannot zoom separately in x and y directions, so
+        // 00 and 11 entry of the zoom matrix are the same
+        return 1 / zoom_matrix.entry(0, 0);
     }
 
     /*
