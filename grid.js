@@ -21,6 +21,7 @@ function Grid(cnv) {
         },
 
         "axes": {
+            "enabled": "true",
             "colour": "black",
             "width": 2
         },
@@ -508,7 +509,10 @@ function Grid(cnv) {
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
         this.drawGridlines();
-        this.drawAxes();
+
+        if (this.settings.axes.enabled) {
+            this.drawAxes();
+        }
 
         for (var i in grid_objects) {
             this.drawObject(grid_objects[i]);

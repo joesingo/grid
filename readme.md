@@ -190,6 +190,7 @@ Here is the full list of available settings and their default values:
     },
 
     "axes": {
+        "enabled": "true",
         "colour": "black",
         "width": 2
     },
@@ -213,10 +214,12 @@ Here is the full list of available settings and their default values:
     }
 ```
 
+Calling `grid.redraw()` may be required after changing some of these settings.
+
 ## Helper methods ##
 `grid.js` is not very comprehensive, so for most applications there will probably be things you want to do that are not possible using just the methods described above. You can of course draw directly onto the canvas yourself, and the following methods are available to facilitate this:
 
-* `canvasCoords(x, y)` returns an array containing the canvas coordinates the correspond to the point `(x, y).
+* `canvasCoords(x, y)` returns an array containing the canvas coordinates the correspond to the point `(x, y)`.
 
 * `fromCanvasCoords(x, y)` is the inverse of `canvasCoords()` - it returns the coordinates corresponding to a point (x, y) in canvas coordinates.
 
