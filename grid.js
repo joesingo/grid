@@ -20,6 +20,8 @@ function Grid(cnv) {
             }
         },
 
+        "background_colour": "white",
+
         "axes": {
             "enabled": "true",
             "colour": "black",
@@ -501,7 +503,8 @@ function Grid(cnv) {
      * Redraw axes, gridline, shapes and functions
      */
     this.redraw = function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = this.settings.background_colour;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Draw border
         ctx.strokeStyle = this.settings.border.colour;

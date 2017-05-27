@@ -189,6 +189,8 @@ Here is the full list of available settings and their default values:
         }
     },
 
+    "background_colour": "white",
+
     "axes": {
         "enabled": "true",
         "colour": "black",
