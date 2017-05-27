@@ -48,7 +48,8 @@ function Grid(cnv) {
     const FUNCTION = "function";
     const LINE = "line";
     const TEXT = "text";
-    var grid_object_types = [SHAPE, FUNCTION, LINE, TEXT];
+    const IMAGE = "image";
+    var grid_object_types = [SHAPE, FUNCTION, LINE, TEXT, IMAGE];
 
     var text_alignments = [
         "left", "center", "right"
@@ -222,6 +223,28 @@ function Grid(cnv) {
 
                 var coords = this.canvasCoords(grid_obj.data.x, grid_obj.data.y);
                 ctx.fillText(grid_obj.data.text, coords[0], coords[1]);
+                break;
+
+            case IMAGE:
+                var d = grid_obj.data;
+
+                var tl_coords = this.canvasCoords(d.x, d.y);
+                var br_coords = this.canvasCoords(d.x + d.width, d.y + d.height);
+
+                var width = br_coords[0] - tl_coords[0];
+                var height = br_coords[1] - tl_coords[1];
+
+                if (typeof(d.rotation) !== "undefined") {
+                    ctx.save();
+                    ctx.translate(tl_coords[0] + 0.5*width, tl_coords[1] + 0.5*height);
+                    ctx.rotate(-d.rotation);
+                    ctx.drawImage(d.image, -0.5*width, -0.5*height, width, height);
+                    ctx.restore();
+                }
+                else {
+                    ctx.drawImage(d.image, tl_coords[0], tl_coords[1], width, height);
+                }
+                break;
         }
 
         if (grid_obj.style.fill) {
@@ -402,6 +425,12 @@ function Grid(cnv) {
 
         return this.addObject(TEXT, {"text": text, "x": x, "y": y,
                                      "alignment": alignment}, style);
+    }
+
+    this.addImage = function(image, x, y, width, height, rotation) {
+        return this.addObject(IMAGE, {"image": image, "x": x, "y": y,
+                                      "width": width, "height": height,
+                                      "rotation": rotation});
     }
 
     this.drawGridlines = function() {

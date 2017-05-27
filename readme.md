@@ -69,6 +69,18 @@ var circle = grid.addParametricFunction(
 
 **Note:** When using `addFunction()` the function is converted to a parametric function internally, so be aware of this when using `getObject()` to edit a function added using `addFunction()`.
 
+## Images ##
+An image can be added with `grid.addImage(image, x, y, width, rotation)`, where `width` and `height` are the dimensions in *grid coordinates*, not canvas coordinates. Images can be rotated about their center by specifying `rotation` as an anti-clockwise angle in radians.
+
+For example:
+```javascript
+var img_obj = new Image();
+img_obj.src = "my_img.jpg";
+img_obj.onload = function() {
+    var img = grid.addImage(img_obj, 0, 0, 1, 1, Math.PI / 4);
+}
+```
+
 ## Lines ##
 A straight line can be added using `grid.addLine(point, direction, style)`. Here `point` is an array `[u, v]` that is a point one the line, and `direction` is an array `[f, g]` that describes the direction of the line. The line will stretch infinitely - to draw a line segment use `addShape()` instead.
 
