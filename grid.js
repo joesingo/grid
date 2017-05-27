@@ -229,7 +229,7 @@ function Grid(cnv) {
                 var d = grid_obj.data;
 
                 var tl_coords = this.canvasCoords(d.x, d.y);
-                var br_coords = this.canvasCoords(d.x + d.width, d.y + d.height);
+                var br_coords = this.canvasCoords(d.x + d.width, d.y - d.height);
 
                 var width = br_coords[0] - tl_coords[0];
                 var height = br_coords[1] - tl_coords[1];
