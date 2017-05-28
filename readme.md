@@ -22,6 +22,7 @@ The methods to add object to the grid take a style object as their final paramet
 * `fill`: Boolean for whether to fill in the object or just draw outline (defaults to false)
 * `font`: The font to use when drawing text (defaults to Arial)
 * `font_size`: The font size in pixels (defaults to 15px)
+* `hidden`: Whether the object should be hidden or not (default to false)
 
 ## Shapes ##
 To add a shape, use `grid.addShape(point, style)`. A shape is represented as an array of points, where each points is an array containing 2 coordinates. For example, to add a triangle:

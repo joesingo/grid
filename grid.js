@@ -38,7 +38,8 @@ function Grid(cnv) {
             "line_width": 2,
             "fill": false,
             "font": "Arial",
-            "font_size": 25
+            "font_size": 25,
+            "hidden": false
         },
 
         "zoom": {
@@ -120,6 +121,10 @@ function Grid(cnv) {
      * Draw a grid object onto the canvas
      */
     this.drawObject = function(grid_obj) {
+        if (grid_obj.style.hidden) {
+            return;
+        }
+
         ctx.beginPath();
 
         ctx.fillStyle = grid_obj.style.colour;
