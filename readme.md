@@ -151,7 +151,7 @@ var circle = grid.addParametricFunction(
     function(t) {
         return [Math.cos(t), Math.sin(t)];
     },
-    [0, 2 * Math.PI]
+    {"interval": [0, 2 * Math.PI]}
 );
 
 var tangent = null;
