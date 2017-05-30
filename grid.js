@@ -565,13 +565,16 @@ function Grid(cnv) {
             return;
         }
 
+        if (this.settings.scroll.callback) {
+            if (!this.settings.scroll.callback(u, v)) {
+                return;
+            }
+        }
+
         var w = new Matrix([[u], [v]]);
         var vector = zoom_matrix.multiply(w);
         translation = translation.add(vector);
 
-        if (this.settings.scroll.callback) {
-            this.settings.scroll.callback(u, v);
-        }
 
         this.redraw();
      }
@@ -585,6 +588,12 @@ function Grid(cnv) {
     this.zoom = function(zoom_factor, mouse_x, mouse_y) {
         if (!this.settings.zoom.enabled) {
             return;
+        }
+
+        if (this.settings.zoom.callback) {
+            if (!this.settings.zoom.callback(zoom_factor, mouse_x, mouse_y)) {
+                return;
+            }
         }
 
         // Find the point that maps to the centre of the canvas
@@ -615,9 +624,6 @@ function Grid(cnv) {
             zoom_counter *= factor;
         }
 
-        if (this.settings.zoom.callback) {
-            this.settings.zoom.callback(zoom_factor, mouse_x, mouse_y);
-        }
 
         this.redraw();
     }
