@@ -345,6 +345,7 @@ function Grid(cnv) {
             throw "No object found with ID '" + id + "'";
         }
 
+        this.unsetZCoord(id);
         delete grid_objects[id];
     }
 
@@ -480,24 +481,37 @@ function Grid(cnv) {
                                       "rotation": rotation});
     }
 
+    /*
+     * Remove an object from the z_coords array and obj_to_z object
+     */
+    this.unsetZCoord = function(id) {
+        var i = 0;
+        while (z_coords[i][0] != obj_to_z[id]) {
+            i++;
+        }
+
+        // Remove just the object if there are other objects at this level,
+        // or otherwise delete the whole level
+        if (z_coords[i][1].length > 1) {
+            var idx = z_coords[i][1].indexOf(id);
+            z_coords[i][1].splice(idx, 1);
+        }
+        else {
+            z_coords.splice(i, 1);
+        }
+
+        delete obj_to_z[id];
+    }
+
+    /*
+     * Set the z-coordinate of an object by inserting the object ID into the
+     * appropriate array of IDs in z_coords and updating obj_to_z
+     */
     this.setZCoord = function(id, z) {
 
         // Remove this object from another z-level if is it in one
         if (id in obj_to_z) {
-            var i = 0;
-            while (z_coords[i][0] != obj_to_z[id]) {
-                i++;
-            }
-
-            // Remove just the object if there are other objects at this level,
-            // or otherwise delete the whole level
-            if (z_coords[i][1].length > 1) {
-                var idx = z_coords[i][1].indexOf(id);
-                z_coords[i][1].splice(idx, 1);
-            }
-            else {
-                z_coords.splice(i, 1);
-            }
+            this.unsetZCoord(id);
         }
 
         // Find the correct position to insert at
