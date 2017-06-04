@@ -107,6 +107,9 @@ var text = grid.addText("Hello there!", 2, 1, "center",
                         {"colour": "green", "font": "Verdana"});
 ```
 
+## Layering ##
+By default each object is given a z-coordinate of 0, and objects are drawn in the order they are added. This ordering can be changed by calling `grid.setZCoord(id, z)` (`grid.redraw()` will be required to see the changes). Objects are then drawn in order of increasing z-coordinate, i.e. objects with the highest z-coordinate appear *above* other obejcts.
+
 ## Editing and removing objects ##
 Removing an object is done with `grid.removeObject(object_id)`, followed by `grid.redraw()`.
 

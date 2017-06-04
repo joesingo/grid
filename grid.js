@@ -78,6 +78,13 @@ function Grid(cnv) {
     var grid_objects = {};
     var current_id = 0;
 
+    // Store the z coordinates of items. Each item in z_coords is an array
+    // [z, ids] where z is the z-coordinate and ids is an array of object IDs
+    // with that coordinate. z_coords is sorted by increasing z
+    var z_coords = [[0, []]];
+    // A mapping from object ID to z coordinate
+    var obj_to_z = {};
+
     // Keep track of how much the base zoom_matrix has been scaled, so that the
     // spacing between grid lines can be adjusted when it gets too large/small.
     // e.g 2 would mean base zoom has been doubled since grid lines were last
@@ -320,8 +327,10 @@ function Grid(cnv) {
         grid_objects[id] = obj;
         current_id++;
 
+        this.setZCoord(id, 0);
+
         // Draw the object
-        this.drawObject(obj);
+        this.redraw();
 
         // Return the ID so that the user can remove/edit this object
         return id;
@@ -471,6 +480,41 @@ function Grid(cnv) {
                                       "rotation": rotation});
     }
 
+    this.setZCoord = function(id, z) {
+
+        // Remove this object from another z-level if is it in one
+        if (id in obj_to_z) {
+            var i = 0;
+            while (z_coords[i][0] != obj_to_z[id]) {
+                i++;
+            }
+
+            // Remove just the object if there are other objects at this level,
+            // or otherwise delete the whole level
+            if (z_coords[i][1].length > 1) {
+                var idx = z_coords[i][1].indexOf(id);
+                z_coords[i][1].splice(idx, 1);
+            }
+            else {
+                z_coords.splice(i, 1);
+            }
+        }
+
+        // Find the correct position to insert at
+        var i = -1;
+        do {
+            i++;
+        } while (i < z_coords.length && z_coords[i][0] < z);
+
+        // Insert a new level if necessary
+        if (i >= z_coords.length || z_coords[i][0] > z) {
+            z_coords.splice(i, 0, [z, []]);
+        }
+
+        z_coords[i][1].push(id);
+        obj_to_z[id] = z;
+    }
+
     this.drawGridlines = function() {
         ctx.beginPath();
 
@@ -552,8 +596,12 @@ function Grid(cnv) {
             this.drawAxes();
         }
 
-        for (var i in grid_objects) {
-            this.drawObject(grid_objects[i]);
+        // Draw object in order of increasing z coordinate
+        for (var i=0; i<z_coords.length; i++) {
+            for (var j=0; j<z_coords[i][1].length; j++) {
+                var id = grid_objects[z_coords[i][1][j]];
+                this.drawObject(id);
+            }
         }
     }
 
